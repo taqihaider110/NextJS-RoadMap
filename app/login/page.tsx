@@ -12,13 +12,26 @@ export default function LoginPage() {
     password: "",
   });
 
-  const onLogin = async () => {
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  const onLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    
     try {
-      console.log(user);
-      await axios.post("/api/login", user);
-      router.push("/profile");
-    } catch (error) {
+      const response = await axios.post("/api/users/login", user);
+      
+      if (response.data.success) {
+        router.push("/profile");
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || "An error occurred during login";
+      setError(errorMessage);
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -29,6 +42,12 @@ export default function LoginPage() {
         className="w-full max-w-md rounded-lg border p-6 shadow"
       >
         <h1 className="mb-6 text-2xl font-bold text-center">Login</h1>
+
+        {error && (
+          <div className="mb-4 rounded bg-red-100 p-3 text-red-700 text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Email */}
         <div className="mb-4">
@@ -67,9 +86,10 @@ export default function LoginPage() {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full rounded bg-black px-4 py-2 text-white hover:opacity-90"
+          disabled={loading}
+          className="w-full rounded bg-black px-4 py-2 text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
 
         {/* Login link */}

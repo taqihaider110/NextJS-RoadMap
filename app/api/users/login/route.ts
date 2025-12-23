@@ -2,7 +2,7 @@ import {connectToDatabase} from "@/dbConfig/dbConfig"
 import User from "@/model/userModel";
 import { NextRequest, NextResponse } from "next/server";
 import bcryptjs from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { generateToken } from "@/helpers/generateToken";
 
 export async function POST(request: NextRequest) {  try {
     await connectToDatabase();
@@ -27,15 +27,13 @@ export async function POST(request: NextRequest) {  try {
       );
     }
 
-    const TokenData = {
-        id: user._id,
+    const tokenData = {
+        id: user._id.toString(),
         email: user.email,
-        username: user.name,
+        username: user.username,
     }
 
-    const token = jwt.sign(TokenData, process.env.JWT_SECRET_KEY as string, {
-        expiresIn: '1h',
-    }); 
+    const token = generateToken(tokenData);
 
     const response = NextResponse.json(
       { message: "Login successful.", user: { id: user._id, email: user.email, username: user.username }, success: true },
@@ -46,7 +44,7 @@ export async function POST(request: NextRequest) {  try {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 3600,
+      maxAge: 86400, // 1 day in seconds
     });
 
     return response;

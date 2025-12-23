@@ -1,24 +1,15 @@
 import { connectToDatabase } from "@/dbConfig/dbConfig";
 import User from "@/model/userModel";
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { getDataFromToken } from "@/helpers/getDataFromToken";
 
 export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
 
-    const token = request.cookies.get("token")?.value;
+    const tokenData = getDataFromToken(request);
 
-    if (!token) {
-      return NextResponse.json(
-        { message: "Unauthorized. Please login." },
-        { status: 401 }
-      );
-    }
-
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET_KEY as string);
-
-    const user = await User.findById(decoded.id).select("-password");
+    const user = await User.findById(tokenData.id).select("-password");
 
     if (!user) {
       return NextResponse.json(
